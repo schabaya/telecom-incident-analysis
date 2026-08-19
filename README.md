@@ -1,133 +1,72 @@
-# Telecom Network Incident & Fault Severity Analysis
+# Telecom Incident Analysis & Fault Severity Prediction
 
-A production-style data analytics and machine learning project that analyzes telecom network incidents, identifies operational patterns associated with severe faults, and predicts incident fault severity using Python, SQL, SQLite, and machine learning.
+An end-to-end telecom network incident analytics and machine learning project using **Python, SQL, SQLite, Pandas, Scikit-learn, and Matplotlib**.
 
-The project uses the **Telstra Network Disruptions dataset** and demonstrates an end-to-end workflow from raw relational data through SQL analysis, feature engineering, predictive modelling, model interpretation, and visualization.
+The project analyzes operational network-event data to identify incident patterns, high-risk locations, log activity, and factors associated with fault severity. It then builds machine-learning models to predict incident severity.
 
 ---
 
 ## Project Objectives
 
-Telecommunications networks generate large volumes of alarms, events, logs, and resource information during operational incidents.
+The project demonstrates how telecom operational data can be transformed into actionable reliability insights.
 
-This project investigates three main questions:
+The main objectives are to:
 
-1. Which network locations experience the highest incident volumes and highest rates of severe faults?
-2. Which event, resource, and log characteristics are associated with fault severity?
-3. Can network incident data be used to predict fault severity accurately enough to support operational prioritization?
-
-The project combines traditional operational analytics with machine learning to explore these questions.
-
----
-
-## Technology Stack
-
-- **Python**
-- **Pandas**
-- **SQL**
-- **SQLite**
-- **Scikit-learn**
-- **Matplotlib**
-- **Git / GitHub**
-- **VS Code**
-
-Machine learning techniques include:
-
-- Logistic Regression
-- Random Forest
-- Class weighting for imbalanced classification
-- One-hot encoding
-- Feature scaling
-- Feature importance analysis
-- Multiclass model evaluation
+- Analyze the distribution and characteristics of network incidents.
+- Identify locations with high incident volumes and high severe-fault rates.
+- Investigate relationships between log activity and fault severity.
+- Combine multiple operational datasets using SQL and Python.
+- Engineer predictive features from events, logs, resources, and severity information.
+- Build and compare machine-learning models for fault-severity prediction.
+- Identify the operational features most associated with severe incidents.
+- Present findings through reproducible analysis and visualizations.
 
 ---
 
 ## Dataset
 
-The project uses the Telstra Network Disruptions dataset.
+This project uses the **Telstra Network Disruptions** dataset originally published as a Kaggle competition.
 
-The raw data consists of multiple related tables describing network incidents:
+The data represents network incidents using several related tables:
 
-- `train.csv`
-- `event_type.csv`
-- `log_feature.csv`
-- `resource_type.csv`
-- `severity_type.csv`
+- `train.csv` — incident ID, location and target fault severity.
+- `event_type.csv` — event types associated with incidents.
+- `log_feature.csv` — log features and their volumes.
+- `resource_type.csv` — resource types associated with incidents.
+- `severity_type.csv` — severity categories associated with incidents.
 
-The training dataset contains:
+The target variable is `fault_severity`:
 
-- **7,381 labelled network incidents**
-- **929 locations**
-- Three fault-severity classes
+- `0` — no fault
+- `1` — only a few faults
+- `2` — many faults
 
-### Target Distribution
-
-| Fault Severity | Incidents | Percentage |
-|---|---:|---:|
-| Class 0 | 4,784 | 64.82% |
-| Class 1 | 1,871 | 25.35% |
-| Class 2 | 726 | 9.84% |
-
-The target is therefore imbalanced, making accuracy alone insufficient for evaluating model performance.
-
-![Fault Severity Distribution](reports/figures/fault_severity_distribution.png)
+The raw Kaggle competition files are **not included in this repository**. They must be obtained separately from the Telstra Network Disruptions competition on Kaggle and placed in `data/raw/`.
 
 ---
 
-## Data Architecture
-
-The original dataset is relational.
-
-A single incident may be associated with multiple:
-
-- event types
-- log features
-- resource types
-
-Conceptually:
-
-```text
-                        INCIDENT
-                           |
-              +------------+------------+
-              |            |            |
-              v            v            v
-          EVENT TYPE   LOG FEATURE   RESOURCE TYPE
-                           |
-                           v
-                     LOG VOLUME
-```
-
-The project therefore performs both relational SQL analysis and incident-level feature engineering before machine learning.
-
----
-
-## Project Workflow
+## Project Architecture
 
 ```text
 Raw Telecom Data
         |
         v
-Data Exploration & Validation
+Data Exploration
         |
         v
 SQLite Database
         |
         v
-SQL Operational Analysis
-        |
-        v
-Incident-Level Aggregation
+SQL Incident Analysis
         |
         v
 Feature Engineering
         |
         v
-459 Modelling Features
+Baseline Model
         |
         v
-Baseline Logistic Regression
+Enhanced Feature Engineering
         |
         v
 Enhanced Logistic Regression
@@ -136,297 +75,11 @@ Enhanced Logistic Regression
 Random Forest
         |
         v
-Model Evaluation
-        |
-        v
-Feature Importance
+Feature Importance Analysis
         |
         v
 Operational Insights & Visualizations
 ```
-
----
-
-## SQL Analysis
-
-The raw CSV datasets are loaded into a SQLite database to support relational analysis.
-
-SQL techniques used include:
-
-- `JOIN`
-- `GROUP BY`
-- `CASE WHEN`
-- aggregate functions
-- Common Table Expressions (CTEs)
-- conditional aggregation
-- incident-level feature construction
-
-The analysis identifies network locations with unusually high incident volumes and concentrations of severe faults.
-
-### Highest Incident-Volume Locations
-
-![Top Incident Locations](reports/figures/top_incident_locations.png)
-
-The highest-volume location contained **85 incidents**.
-
-High incident frequency, however, does not necessarily imply the highest severe-fault risk.
-
----
-
-## Severe Fault Concentration by Location
-
-Locations were also evaluated according to their proportion of Severity Class 2 incidents.
-
-To reduce instability from very small samples, the analysis used locations with at least 20 incidents for the severity-rate comparison.
-
-A notable example was:
-
-```text
-Location: location 1100
-Total incidents: 45
-Severity Class 2 incidents: 33
-Severity Class 2 rate: 73.33%
-```
-
-This demonstrates why incident frequency and incident severity should be evaluated separately.
-
-![Severity Class 2 Rate by Location](reports/figures/severity_2_rate_by_location.png)
-
----
-
-## Log Activity and Fault Severity
-
-Incident-level log statistics were generated using SQL and Python.
-
-Average log activity differed substantially across severity classes:
-
-| Fault Severity | Avg. Log Features | Avg. Total Log Volume | Avg. Log Volume | Avg. Max Log Volume |
-|---|---:|---:|---:|---:|
-| Class 0 | 3.26 | 35.94 | 9.88 | 15.63 |
-| Class 1 | 3.03 | 13.36 | 4.13 | 7.21 |
-| Class 2 | 3.58 | **52.26** | **14.17** | **29.42** |
-
-Severity Class 2 incidents displayed the highest average total, average, and maximum log volumes in this dataset.
-
-![Log Volume by Severity](reports/figures/log_volume_by_severity.png)
-
-These patterns are descriptive associations and should not be interpreted as evidence of causality.
-
----
-
-## Feature Engineering
-
-The first incident-level dataset contained aggregate operational features such as:
-
-- log feature count
-- total log volume
-- average log volume
-- maximum log volume
-- event count
-- unique event types
-- resource count
-- unique resource types
-- location
-- severity type
-
-This produced a compact incident-level representation.
-
-A second feature-engineering stage retained the identities of individual network signals.
-
-For example:
-
-```text
-Raw event records
-
-id      event_type
-5022    event_type 15
-5022    event_type 11
-```
-
-were transformed conceptually into:
-
-```text
-id      event_11    event_15
-5022       1           1
-```
-
-Log features retained their associated volumes:
-
-```text
-id      log_56      log_172
-5022       1            2
-```
-
-The final enhanced dataset contained:
-
-- **7,381 incidents**
-- **461 total columns**
-- **459 modelling features**
-- **0 missing values**
-- **0 duplicate incident IDs**
-
----
-
-## Machine Learning
-
-The target variable is a three-class fault-severity classification problem.
-
-Because the classes are imbalanced, models were evaluated using several metrics rather than accuracy alone:
-
-- Accuracy
-- Precision
-- Recall
-- F1-score
-- Macro F1
-- Confusion matrix
-
-Special attention was given to **Class 2 recall and F1-score** because Class 2 is the smallest target class.
-
----
-
-## Model 1 — Baseline Logistic Regression
-
-The first Logistic Regression model used aggregate incident features.
-
-Results:
-
-| Metric | Score |
-|---|---:|
-| Accuracy | 0.619 |
-| Macro F1 | 0.553 |
-| Class 2 Precision | 0.335 |
-| Class 2 Recall | 0.752 |
-| Class 2 F1 | 0.464 |
-
-The model achieved strong minority-class recall but produced many false Class 2 predictions.
-
----
-
-## Model 2 — Enhanced Logistic Regression
-
-The enhanced model incorporated the identities of event types, resource types, and individual log features.
-
-Results:
-
-| Metric | Score |
-|---|---:|
-| Accuracy | **0.680** |
-| Macro F1 | **0.626** |
-| Class 2 Precision | **0.446** |
-| Class 2 Recall | **0.772** |
-| Class 2 F1 | **0.566** |
-
-Feature engineering therefore improved both overall performance and minority-class classification.
-
-Macro F1 increased from:
-
-```text
-0.553 -> 0.626
-```
-
-without changing the underlying classification algorithm.
-
-This illustrates the importance of feature representation in machine learning.
-
----
-
-## Model 3 — Random Forest
-
-A Random Forest classifier was then trained using the enhanced feature set.
-
-Results:
-
-| Metric | Score |
-|---|---:|
-| Accuracy | **0.726** |
-| Macro F1 | **0.680** |
-| Class 2 Precision | **0.538** |
-| Class 2 Recall | **0.786** |
-| Class 2 F1 | **0.639** |
-
-Random Forest produced the strongest overall performance.
-
-### Confusion Matrix
-
-```text
-                 Predicted
-               0     1     2
-
-Actual 0      711   186    60
-Actual 1       89   248    38
-Actual 2        6    25   114
-```
-
-Of the **145 actual Class 2 incidents in the test set, 114 were correctly identified**, corresponding to **78.6% recall**.
-
----
-
-## Model Comparison
-
-| Model | Accuracy | Macro F1 | Class 2 F1 |
-|---|---:|---:|---:|
-| Logistic Regression — Aggregate | 0.619 | 0.553 | 0.464 |
-| Logistic Regression — Enhanced | 0.680 | 0.626 | 0.566 |
-| **Random Forest — Enhanced** | **0.726** | **0.680** | **0.639** |
-
-![Model Performance Comparison](reports/figures/model_comparison.png)
-
-The results show two clear improvements:
-
-```text
-Better feature representation
-        |
-        v
-Macro F1: 0.553 -> 0.626
-
-Nonlinear ensemble modelling
-        |
-        v
-Macro F1: 0.626 -> 0.680
-```
-
----
-
-## Feature Importance
-
-Random Forest feature importance was used to investigate which variables contributed most strongly to the fitted model's predictions.
-
-Top features included:
-
-| Feature | Importance |
-|---|---:|
-| `log_203` | 0.0784 |
-| Total log volume | 0.0733 |
-| Average log volume | 0.0709 |
-| Maximum log volume | 0.0591 |
-| `log_82` | 0.0438 |
-| Log feature count | 0.0328 |
-| `event_15` | 0.0199 |
-| `log_312` | 0.0164 |
-| `event_35` | 0.0149 |
-| `log_170` | 0.0129 |
-
-![Feature Importance](reports/figures/feature_importance.png)
-
-The model relied substantially on both **log-feature identity and log-volume characteristics**.
-
-Feature importance represents predictive contribution within the fitted model and should not be interpreted as causal evidence.
-
----
-
-## Key Findings
-
-The analysis produced several operationally relevant findings:
-
-1. Network incident volume is concentrated in particular locations, but high volume does not necessarily correspond to the highest severe-fault rate.
-2. Severity Class 2 incidents exhibited substantially higher average log-volume characteristics than Class 1 incidents.
-3. Preserving individual event, resource, and log-feature identities materially improved classification performance.
-4. Enhanced Logistic Regression increased Macro F1 from **0.553 to 0.626**.
-5. Random Forest further increased Macro F1 to **0.680**.
-6. The final Random Forest identified **78.6% of Class 2 incidents** in the held-out test set.
-7. Log-feature identities and log-volume characteristics were among the most important predictive variables.
-
-These results suggest that combining network topology/location information with detailed event and log telemetry can provide useful signals for operational fault-severity prioritization.
 
 ---
 
@@ -436,8 +89,8 @@ These results suggest that combining network topology/location information with 
 telecom-incident-analysis/
 |
 |-- data/
-|   |-- raw/
-|   `-- processed/
+|   |-- raw/                    # Kaggle source data (not committed)
+|   `-- processed/              # Generated datasets (not committed)
 |
 |-- reports/
 |   `-- figures/
@@ -470,12 +123,227 @@ telecom-incident-analysis/
 
 ---
 
+## Data Exploration
+
+The training dataset contains:
+
+- **7,381 incidents**
+- **929 unique locations**
+- No missing values
+- No duplicate training rows
+
+### Fault Severity Distribution
+
+| Fault Severity | Incidents | Percentage |
+|---|---:|---:|
+| 0 | 4,784 | 64.82% |
+| 1 | 1,871 | 25.35% |
+| 2 | 726 | 9.84% |
+
+The target is therefore **imbalanced**, with severity class 2 representing fewer than 10% of incidents.
+
+![Fault Severity Distribution](reports/figures/fault_severity_distribution.png)
+
+---
+
+## SQL Incident Analysis
+
+Operational analysis was performed using **SQLite and SQL**.
+
+### Highest Incident-Volume Locations
+
+The highest-volume locations included:
+
+| Location | Incident Count |
+|---|---:|
+| location 821 | 85 |
+| location 1107 | 78 |
+| location 734 | 75 |
+| location 126 | 71 |
+| location 1008 | 71 |
+
+![Top Incident Locations](reports/figures/top_incident_locations.png)
+
+### Severe Incident Concentration
+
+Looking only at severity class 2 revealed a different operational risk picture.
+
+For example:
+
+**location 1100**
+
+- Total incidents: 45
+- Severity 2 incidents: 33
+- Severity 2 rate: **73.33%**
+
+By comparison:
+
+**location 821**
+
+- Total incidents: 85
+- Severity 2 incidents: 28
+
+This illustrates why incident volume alone is not sufficient for reliability prioritization. A lower-volume location may represent substantially greater operational risk when the severity distribution is considered.
+
+![Severity 2 Rate by Location](reports/figures/severity_2_rate_by_location.png)
+
+---
+
+## Log Activity and Fault Severity
+
+Aggregating log activity revealed substantial differences between severity classes.
+
+| Severity | Avg Features | Avg Total Log Volume | Avg Log Volume | Avg Max Log Volume |
+|---|---:|---:|---:|---:|
+| 0 | 3.26 | 35.94 | 9.88 | 15.63 |
+| 1 | 3.03 | 13.36 | 4.13 | 7.21 |
+| 2 | **3.58** | **52.26** | **14.17** | **29.42** |
+
+Severity class 2 incidents showed the highest average total log volume, average log volume, and maximum log volume.
+
+This indicates that log activity contains useful predictive information about incident severity.
+
+![Log Volume by Severity](reports/figures/log_volume_by_severity.png)
+
+---
+
+## Feature Engineering
+
+The first engineered dataset combined incident-level operational metrics such as:
+
+- Log feature count
+- Total log volume
+- Average log volume
+- Maximum log volume
+- Event count
+- Unique event types
+- Resource count
+- Unique resource types
+- Severity type
+
+This produced:
+
+**7,381 rows × 12 columns**
+
+A second feature-engineering stage expanded categorical operational events, resources, and log features into machine-learning features.
+
+The enhanced dataset contained:
+
+**7,381 incidents × 461 columns**
+
+with **459 predictive features**.
+
+---
+
+## Machine Learning
+
+Three models were evaluated.
+
+### Model Performance
+
+| Model | Accuracy | Macro F1 |
+|---|---:|---:|
+| Baseline Logistic Regression | 0.619 | 0.553 |
+| Enhanced Logistic Regression | 0.680 | 0.626 |
+| **Random Forest** | **0.726** | **0.680** |
+
+![Model Comparison](reports/figures/model_comparison.png)
+
+The progressive improvement demonstrates the impact of richer feature engineering and nonlinear modeling.
+
+---
+
+## Random Forest Results
+
+The Random Forest produced the strongest overall performance.
+
+### Classification Results
+
+| Class | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| Severity 0 | 0.882 | 0.743 | 0.807 |
+| Severity 1 | 0.540 | 0.661 | 0.595 |
+| Severity 2 | 0.538 | **0.786** | **0.639** |
+
+Overall:
+
+- **Accuracy:** 72.6%
+- **Macro F1:** 0.680
+- **Severity-2 recall:** 78.6%
+
+The severity-2 recall is particularly important operationally because the model successfully identifies a substantial proportion of the highest-severity incidents.
+
+---
+
+## Feature Importance
+
+Random Forest feature importance identified several influential predictors.
+
+Top features included:
+
+| Feature | Importance |
+|---|---:|
+| log feature 203 | 0.0784 |
+| total log volume | 0.0733 |
+| average log volume | 0.0709 |
+| maximum log volume | 0.0591 |
+| log feature 82 | 0.0438 |
+| log feature count | 0.0328 |
+| event type 15 | 0.0199 |
+
+![Feature Importance](reports/figures/feature_importance.png)
+
+The results reinforce the importance of **log behavior and log volume** in distinguishing fault-severity levels.
+
+---
+
+## Operational Insights
+
+Several useful reliability insights emerged from the analysis.
+
+**1. Incident frequency and incident risk are different measures.**
+
+The locations generating the most incidents are not necessarily the locations with the highest proportion of severe incidents.
+
+**2. Severity class 2 incidents exhibit stronger log activity.**
+
+Higher total, average, and maximum log volumes are associated with the highest-severity class.
+
+**3. Individual log features contain strong predictive information.**
+
+Specific log features ranked above many aggregate metrics in Random Forest feature importance.
+
+**4. Feature engineering materially improved predictive performance.**
+
+Accuracy increased from **61.9% to 72.6%**, while Macro F1 increased from **0.553 to 0.680**.
+
+**5. Operational prioritization should combine frequency, severity and telemetry behavior.**
+
+A reliability team could use these signals to identify locations and incident patterns requiring proactive investigation.
+
+---
+
+## Technologies Used
+
+- Python
+- Pandas
+- NumPy
+- Scikit-learn
+- SQL
+- SQLite
+- Matplotlib
+- Git
+- GitHub
+- VS Code
+
+---
+
 ## Running the Project
 
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/schabaya/telecom-incident-analysis.git
 cd telecom-incident-analysis
 ```
 
@@ -499,7 +367,15 @@ Windows PowerShell:
 python -m pip install -r requirements.txt
 ```
 
-### 5. Run the pipeline
+### 5. Add the dataset
+
+Place the required Kaggle CSV files inside:
+
+```text
+data/raw/
+```
+
+### 6. Run the pipeline
 
 ```bash
 python src/01_data_exploration.py
@@ -516,75 +392,30 @@ python src/10_visualizations.py
 
 ---
 
-## Skills Demonstrated
-
-This project demonstrates practical experience in:
-
-**Python**
-- data manipulation
-- reusable analytical scripts
-- feature engineering
-- machine learning pipelines
-- model evaluation
-
-**SQL**
-- joins
-- aggregations
-- CTEs
-- conditional aggregation
-- relational incident analysis
-
-**Machine Learning**
-- multiclass classification
-- imbalanced datasets
-- Logistic Regression
-- Random Forest
-- feature encoding
-- model comparison
-- precision/recall/F1 analysis
-- feature importance
-
-**Data Engineering**
-- multi-table datasets
-- SQLite
-- raw/processed data separation
-- relational-to-feature-matrix transformation
-
-**Operational Analytics**
-- incident concentration
-- fault-severity analysis
-- log-volume analysis
-- operational risk prioritization
-
----
-
 ## Potential Future Improvements
 
-Possible extensions include:
+Future development could include:
 
-- cross-validation and hyperparameter optimization
-- gradient-boosted tree models
-- probability calibration
-- SHAP-based local and global model interpretation
-- automated unit and data-quality tests
-- experiment tracking
-- model serialization and inference API
-- Docker packaging
+- Gradient boosting models such as XGBoost or LightGBM
+- Hyperparameter optimization
+- Cross-validation
+- Precision-recall and ROC analysis
+- Model persistence and inference pipeline
+- REST API deployment
+- Docker containerization
+- Automated testing
 - CI/CD pipeline
-- monitoring for model and data drift
+- Interactive Power BI or Streamlit operational dashboard
+- Model monitoring and drift detection
 
 ---
 
-## Disclaimer
+## Conclusion
 
-This project is an independent portfolio analysis using a public telecom network-disruption dataset.
+This project demonstrates an end-to-end workflow for converting telecom operational data into reliability insights and predictive models.
 
-The findings represent patterns observed within this dataset and should not be interpreted as causal relationships or production network recommendations without further validation.
+It combines:
 
----
+**data exploration → SQL analytics → feature engineering → machine learning → model evaluation → operational interpretation → visualization**
 
-## Author
-
-**Shadreck Chabaya**
-
-Data Science | Machine Learning | Telecom Operations & Reliability Analytics
+The final Random Forest model achieved **72.6% accuracy**, **0.680 Macro F1**, and **78.6% recall for severity class 2**, demonstrating how network events, resource information and log telemetry can be used to identify higher-severity incident patterns.
